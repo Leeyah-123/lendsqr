@@ -1,13 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
-import AuthService from './auth.service';
 import { StatusCodes } from 'http-status-codes';
+import { BaseController } from '../../core/base.controller';
+import AuthService from './auth.service';
 import {
-  changePasswordValidationSchema,
-  forgotPasswordValidationSchema,
   loginValidationSchema,
   registerValidationSchema,
 } from './auth.validation';
-import { BaseController } from '../../core/base.controller';
 
 export default class AuthController extends BaseController {
   private authService: AuthService;

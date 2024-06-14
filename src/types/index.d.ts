@@ -1,5 +1,5 @@
-import pino from "pino";
-import jwt from "jsonwebtoken";
+import pino from 'pino';
+import jwt from 'jsonwebtoken';
 
 declare global {
   interface Error {
@@ -10,6 +10,7 @@ declare global {
 
   namespace Express {
     interface Request {
+      user: { id: string };
       logger: pino.Logger;
       logError: (message: string, error?: unknown) => void;
     }

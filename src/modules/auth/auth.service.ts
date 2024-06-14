@@ -1,18 +1,15 @@
 import { StatusCodes } from 'http-status-codes';
-import * as jwt from 'jsonwebtoken';
+import { sign, verify } from 'jsonwebtoken';
 import pino from 'pino';
 import { ServiceResponse } from '../../core/types';
 import { LoginDto, RegisterDto } from './auth.validation';
 
+type AuthTokens = {
+  accessToken: string;
+  refreshToken: string;
+};
+
 export default class AuthService {
-  private getToken(payload: object, expiresIn = '30d') {
-    return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn });
-  }
-
-  private verifyToken(token: string) {
-    return <jwt.UserIDJwtPayload>jwt.verify(token, process.env.JWT_SECRET!);
-  }
-
   async register(
     dto: RegisterDto,
     logger: pino.Logger
@@ -100,4 +97,24 @@ export default class AuthService {
     //   },
     // };
   }
+
+  private generateAuthTokens = (userId: string): AuthTokens => {
+    const accessToken = sign({ userId }, process.env.ACCESS_TOKEN_SECRET!, {
+      expiresIn: process.env.ACCESS_TOKEN_SECRET_EXPIRES_IN,
+    });
+    const refreshToken = sign({ userId }, process.env.REFRESH_TOKEN_SECRET!, {
+      expiresIn: process.env.REFRESH_TOKEN_SECRET_EXPIRES_IN,
+    });
+
+    return { accessToken, refreshToken };
+  };
+
+  private verifyRefreshToken = (token: string): boolean => {
+    try {
+      verify(token, process.env.REFRESH_TOKEN_SECRET!);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
 }
