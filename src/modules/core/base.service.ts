@@ -5,7 +5,7 @@ type PaginationResponse = {
   count: number;
 };
 
-export class BaseService {
+export default class BaseService {
   getPagination(
     page: number,
     limit: number,

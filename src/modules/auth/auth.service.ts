@@ -1,7 +1,9 @@
 import { StatusCodes } from 'http-status-codes';
-import { sign, verify } from 'jsonwebtoken';
+import { UserIDJwtPayload, sign, verify } from 'jsonwebtoken';
+import { User } from 'knex/types/tables';
 import pino from 'pino';
-import { ServiceResponse } from '../../core/types';
+import UserDao from '../../dao/user';
+import { ServiceResponse } from '../core/types';
 import { LoginDto, RegisterDto } from './auth.validation';
 
 type AuthTokens = {
@@ -10,6 +12,27 @@ type AuthTokens = {
 };
 
 export default class AuthService {
+  private readonly userDao: UserDao;
+
+  constructor() {
+    this.userDao = new UserDao();
+  }
+
+  async getProfile(userId: string): Promise<ServiceResponse<User>> {
+    const user = await this.userDao.findById(userId);
+    if (!user)
+      return {
+        status: StatusCodes.NOT_FOUND,
+        message: 'User not found',
+      };
+
+    delete (user as Partial<User>).password;
+
+    return {
+      data: user,
+    };
+  }
+
   async register(
     dto: RegisterDto,
     logger: pino.Logger
@@ -98,6 +121,20 @@ export default class AuthService {
     // };
   }
 
+  async refreshToken(token: string): Promise<ServiceResponse<AuthTokens>> {
+    const payload = this.verifyRefreshToken(token);
+    if (payload) {
+      return {
+        message: 'Token refreshed successfully',
+        data: this.generateAuthTokens(payload.userId),
+      };
+    }
+
+    return {
+      message: 'Malformed or expired token provided',
+    };
+  }
+
   private generateAuthTokens = (userId: string): AuthTokens => {
     const accessToken = sign({ userId }, process.env.ACCESS_TOKEN_SECRET!, {
       expiresIn: process.env.ACCESS_TOKEN_SECRET_EXPIRES_IN,
@@ -109,12 +146,14 @@ export default class AuthService {
     return { accessToken, refreshToken };
   };
 
-  private verifyRefreshToken = (token: string): boolean => {
+  private verifyRefreshToken = (
+    token: string
+  ): UserIDJwtPayload | undefined => {
     try {
-      verify(token, process.env.REFRESH_TOKEN_SECRET!);
-      return true;
+      const payload = verify(token, process.env.REFRESH_TOKEN_SECRET!);
+      return <UserIDJwtPayload>payload;
     } catch (err) {
-      return false;
+      return undefined;
     }
   };
 }

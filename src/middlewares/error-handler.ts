@@ -19,7 +19,6 @@ export const errorHandler = (
       data,
       originalUrl: req.originalUrl,
       method: req.method,
-      ip: req.ip,
     });
 
     if (err.timeout) {

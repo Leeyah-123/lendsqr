@@ -17,10 +17,12 @@ const rootLogger = pino().child({
   context: 'server',
 });
 
+// TODO: Implement user signup, login, get profile
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors()); // TODO: Set CORS origin(s)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

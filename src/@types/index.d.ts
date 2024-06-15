@@ -1,5 +1,5 @@
-import pino from 'pino';
 import jwt from 'jsonwebtoken';
+import pino from 'pino';
 
 declare global {
   interface Error {
