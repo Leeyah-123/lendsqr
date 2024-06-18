@@ -1,6 +1,8 @@
 import { StatusCodes } from 'http-status-codes';
-import { Wallet } from 'knex/types/tables';
+import { Wallet } from 'knex';
 import WalletDao from '../../dao/wallet';
+import db from '../../database/database';
+import { TransactionType } from '../../utils/enums';
 import { ServiceResponse } from '../core/types';
 import FinancesService from '../finances/finances.service';
 import {
@@ -29,7 +31,7 @@ export default class WalletsService {
     userId,
     transactionId,
     amount,
-  }: FundUserWalletDto): Promise<ServiceResponse> {
+  }: FundUserWalletDto): Promise<ServiceResponse<Wallet>> {
     const wallet = await this.walletDao.findByUserId(userId);
     if (!wallet) {
       return {
@@ -45,8 +47,24 @@ export default class WalletsService {
       };
     }
 
-    const updatedWallet = await this.walletDao.update(wallet.id, {
-      balance: wallet.balance + amount,
+    const updatedWallet = await db.transaction(async (trx) => {
+      await trx('wallets')
+        .where('id', wallet.id)
+        .update({
+          balance: wallet.balance + amount,
+        });
+
+      const updatedWallet = await trx('wallets')
+        .where('id', wallet.id)
+        .select('*')
+        .first();
+      await trx('transactions').insert({
+        amount,
+        userId,
+        type: TransactionType.DEPOSIT,
+      });
+
+      return updatedWallet;
     });
 
     return {
@@ -59,7 +77,7 @@ export default class WalletsService {
     userId,
     amount,
     acctNumber,
-  }: TransferFundsDto): Promise<ServiceResponse> {
+  }: TransferFundsDto): Promise<ServiceResponse<Wallet>> {
     const wallet = await this.walletDao.findByUserId(userId);
     if (!wallet) {
       return {
@@ -90,11 +108,30 @@ export default class WalletsService {
       };
     }
 
-    const updatedWallet = await this.walletDao.update(wallet.id, {
-      balance: wallet.balance - amount,
-    });
-    await this.walletDao.update(recipient.id, {
-      balance: recipient.balance + amount,
+    const updatedWallet = await db.transaction(async (trx) => {
+      await trx('wallets')
+        .where('id', wallet.id)
+        .update({
+          balance: wallet.balance - amount,
+        });
+
+      const updatedWallet = (await trx('wallets')
+        .select('*')
+        .where('id', wallet.id)
+        .first()) as Wallet;
+      await trx('wallets')
+        .where('id', recipient.id)
+        .update({
+          balance: recipient.balance + amount,
+        });
+      await trx('transactions').insert({
+        amount,
+        userId,
+        recipientId: recipient.id,
+        type: TransactionType.TRANSFER,
+      });
+
+      return updatedWallet;
     });
 
     return {
@@ -106,7 +143,7 @@ export default class WalletsService {
   async withdrawFunds({
     userId,
     amount,
-  }: WithdrawFundsDto): Promise<ServiceResponse> {
+  }: WithdrawFundsDto): Promise<ServiceResponse<Wallet>> {
     const wallet = await this.walletDao.findByUserId(userId);
     if (!wallet) {
       return {
@@ -122,10 +159,26 @@ export default class WalletsService {
       };
     }
 
-    const updatedWallet = await this.walletDao.update(wallet.id, {
-      balance: wallet.balance - amount,
+    const updatedWallet = await db.transaction(async (trx) => {
+      await trx('wallets')
+        .where('id', wallet.id)
+        .update({
+          balance: wallet.balance - amount,
+        });
+
+      const updatedWallet = (await trx('wallets')
+        .select('*')
+        .where('id', wallet.id)
+        .first()) as Wallet;
+      await trx('transactions').insert({
+        amount,
+        userId,
+        type: TransactionType.WITHDRAWAL,
+      });
+      await this.financesService.transfer(wallet.acctNumber, amount);
+
+      return updatedWallet;
     });
-    await this.financesService.transfer(wallet.acctNumber, amount);
 
     return {
       message: 'Funds withdrawn successfully',

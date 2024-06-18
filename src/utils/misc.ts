@@ -1,4 +1,15 @@
 // TODO: Use generics to infer the correct return types
+type CamelToSnake<T extends { [key: string]: any } | { [key: string]: any }[]> =
+  {
+    // Convert each key to snake case and return the type
+    [key in keyof T]: T[key] extends { [key: string]: any }
+      ? {
+          [K in keyof T[key]]: T[key][K] extends { [key: string]: any }
+            ? CamelToSnake<T[key][K]>
+            : T[key][K];
+        }
+      : T[key];
+  };
 
 /**
  * Converts an object with keys in camelCase to snake_case, handling arrays.
@@ -57,4 +68,22 @@ export const convertSnakeToCamel = (
   }
 
   return convertedObj;
+};
+
+/**
+ * Generates a random number string of the specified length.
+ *
+ * @param length - The length of the string to be generated
+ * @returns A random number of the provided length
+ */
+export const generateRandomNum = (length: number): number => {
+  const characters = '0123456789';
+  let result = '';
+
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    result += characters.charAt(randomIndex);
+  }
+
+  return Number(result);
 };

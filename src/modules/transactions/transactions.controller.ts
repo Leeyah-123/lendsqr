@@ -14,9 +14,16 @@ export default class TransactionsController extends BaseController {
   }
 
   async getTransactionHistory(req: Request, res: Response, next: NextFunction) {
-    const serviceResponse =
-      await this.transactionsService.getTransactionHistory(req.user.id);
+    try {
+      const serviceResponse =
+        await this.transactionsService.getTransactionHistory(req.user.id);
 
-    return this.getControllerSuccessResponse(res, serviceResponse);
+      return this.getControllerResponse({
+        res,
+        ...serviceResponse,
+      });
+    } catch (err) {
+      next(err);
+    }
   }
 }

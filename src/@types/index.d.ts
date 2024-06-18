@@ -4,7 +4,6 @@ import pino from 'pino';
 declare global {
   interface Error {
     data?: any;
-    timeout?: number;
     statusCode: number;
   }
 

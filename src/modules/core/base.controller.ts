@@ -1,27 +1,29 @@
 import { Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { ZodError } from 'zod';
-import { ServiceResponse } from './types';
 
 export default class BaseController {
-  protected getControllerSuccessResponse(
-    res: Response,
-    serviceResponse: ServiceResponse
-  ) {
-    return res.status(serviceResponse.status || StatusCodes.OK).json({
-      ...(serviceResponse.message && { message: serviceResponse.message }),
-      ...(serviceResponse.data && { data: serviceResponse.data }),
-    });
-  }
-  protected getControllerErrorResponse(
-    res: Response,
-    status: StatusCodes,
-    message: string
-  ) {
+  protected getControllerResponse({
+    res,
+    status = StatusCodes.OK,
+    message,
+    data,
+  }: {
+    res: Response;
+    status?: StatusCodes;
+    message?: string;
+    data?: any;
+  }) {
+    const isSuccessStatus = status >= 200 && status < 300;
+
     return res.status(status).json({
-      error: message,
+      ...(isSuccessStatus
+        ? message && { message }
+        : message && { error: message }),
+      ...(data && { data }),
     });
   }
+
   protected getControllerValidationErrorResponse(
     res: Response,
     error: ZodError

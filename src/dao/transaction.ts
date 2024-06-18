@@ -1,6 +1,5 @@
-import { Transaction } from 'knex/types/tables';
+import { Transaction } from 'knex';
 import db from '../database/database';
-import { convertCamelToSnake } from '../utils/misc';
 
 export default class TransactionDao {
   public async findById(id: string) {
@@ -8,23 +7,33 @@ export default class TransactionDao {
   }
 
   public async findByUserId(userId: string) {
-    return db('transactions').select('*').where('user_id', userId);
+    return db('transactions').select('*').where('userId', userId);
   }
 
   public async create(
     dto: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>
   ) {
-    return db('transactions').insert(convertCamelToSnake(dto)).returning('*');
+    const [insertedData] = await db('transactions')
+      .insert(dto)
+      .then(async () => {
+        return await db('transactions').where(dto).select('*');
+      });
+
+    return insertedData;
   }
 
   public async update(
     id: string,
     dto: Exclude<Partial<Transaction>, 'id' | 'createdAt' | 'updatedAt'>
   ) {
-    return db('transactions')
+    const [updatedData] = await db('transactions')
       .where('id', id)
-      .update(convertCamelToSnake(dto))
-      .returning('*');
+      .update(dto)
+      .then(async () => {
+        return await db('transactions').where('id', id).select('*');
+      });
+
+    return updatedData;
   }
 
   public async delete(id: string) {

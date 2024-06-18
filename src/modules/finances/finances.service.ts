@@ -13,8 +13,7 @@ export default class FinancesService {
   /**
    * @dev This method should be used to transfer funds from the system to a user.
    */
-  async transfer(_acctNumber: number, _amount: number): Promise<boolean> {
+  async transfer(_acctNumber: number, _amount: number): Promise<void> {
     // TODO: Implement transfer functionality
-    return true;
   }
 }

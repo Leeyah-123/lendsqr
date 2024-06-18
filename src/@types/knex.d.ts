@@ -1,11 +1,7 @@
-import { Knex } from 'knex';
+import { Knex, Transaction, User, Wallet } from 'knex';
+import { TransactionType } from '../utils/enums';
 
-declare module 'knex/types/tables' {
-  enum TransactionType {
-    WITHDRAWAL = 'withdrawal',
-    DEPOSIT = 'deposit',
-  }
-
+declare module 'knex' {
   type User = {
     id: string;
     name: string;
@@ -28,12 +24,15 @@ declare module 'knex/types/tables' {
   type Transaction = {
     id: string;
     userId: string;
+    recipientId?: string;
     type: TransactionType;
     amount: number;
     createdAt: Date;
     updatedAt: Date;
   };
+}
 
+declare module 'knex/types/tables' {
   interface Tables {
     users: User;
     users_composite: Knex.CompositeTableType<

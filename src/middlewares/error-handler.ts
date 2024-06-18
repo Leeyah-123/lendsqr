@@ -6,6 +6,8 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ): Response => {
+  console.log('Error', err);
+
   if (err instanceof Error) {
     err.statusCode = (err as Error).statusCode || 500;
     err.message = err.message || 'Something went wrong';
@@ -13,6 +15,7 @@ export const errorHandler = (
 
     const { statusCode, message, data } = err;
 
+    // Log out the error for debugging purposes
     req.logger.error({
       statusCode,
       message,
@@ -21,31 +24,22 @@ export const errorHandler = (
       method: req.method,
     });
 
-    if (err.timeout) {
-      return res.status(408).send({
-        success: false,
-        data: null,
-        message: 'Request timeout',
-      });
-    }
-
     if (statusCode === 404) {
       return res.status(statusCode).json({
-        success: false,
+        error: message ?? 'resource not found',
         data: null,
-        message: message ?? 'resource not found',
       });
     }
 
     return res.status(statusCode).json({
-      success: false,
+      error:
+        'Unable to process your request at this time. Please try again later.',
       data: data,
-      message: message,
     });
   }
 
   return res.status(500).json({
-    success: false,
-    error: err,
+    error:
+      'Unable to process your request at this time. Please try again later.',
   });
 };

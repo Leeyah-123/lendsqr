@@ -1,6 +1,5 @@
-import { Wallet } from 'knex/types/tables';
+import { Wallet } from 'knex';
 import db from '../database/database';
-import { convertCamelToSnake } from '../utils/misc';
 
 export default class WalletDao {
   public async findById(id: string) {
@@ -8,25 +7,35 @@ export default class WalletDao {
   }
 
   public async findByUserId(userId: string) {
-    return db('wallets').select('*').where('user_id', userId).first();
+    return db('wallets').select('*').where('userId', userId).first();
   }
 
   public async findByAcctNumber(acctNumber: number) {
-    return db('wallets').select('*').where('acct_number', acctNumber).first();
+    return db('wallets').select('*').where('acctNumber', acctNumber).first();
   }
 
   public async create(dto: Omit<Wallet, 'id' | 'createdAt' | 'updatedAt'>) {
-    return db('wallets').insert(convertCamelToSnake(dto)).returning('*');
+    const [insertedData] = await db('wallets')
+      .insert(dto)
+      .then(async () => {
+        return await db('wallets').where(dto).select('*');
+      });
+
+    return insertedData;
   }
 
   public async update(
     id: string,
     dto: Exclude<Partial<Wallet>, 'id' | 'createdAt' | 'updatedAt'>
   ) {
-    return db('wallets')
+    const [updatedData] = await db('wallets')
       .where('id', id)
-      .update(convertCamelToSnake(dto))
-      .returning('*');
+      .update(dto)
+      .then(async () => {
+        return await db('wallets').where('id', id).select('*');
+      });
+
+    return updatedData;
   }
 
   public async delete(id: string) {

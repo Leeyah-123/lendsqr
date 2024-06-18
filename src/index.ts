@@ -17,8 +17,6 @@ const rootLogger = pino().child({
   context: 'server',
 });
 
-// TODO: Implement user signup, login, get profile
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -39,14 +37,16 @@ apiRouter.use('/transactions', transactions);
 apiRouter.use('/wallets', wallets);
 
 // Attach Routes to server
-app.use(apiRouter);
+app.use('/api', apiRouter);
 app.use('/ping', (req, res) => {
   res.json({ message: 'pong' });
 });
 
-// Catch 404 and forward to error handler
-app.use((req, res) => {
-  res.status(404).send('Not Found');
+// Catch 404 routes
+app.use((_req, res) => {
+  res.status(404).json({
+    error: 'Not found',
+  });
 });
 
 // Error Boundary
@@ -55,3 +55,5 @@ app.use(errorHandler);
 app.listen(PORT, async () => {
   rootLogger.info(`App listening on port ${PORT}`);
 });
+
+export default app;
