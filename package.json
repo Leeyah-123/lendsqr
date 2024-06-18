@@ -52,5 +52,8 @@
     "ts-node": "^10.9.2",
     "tsc-watch": "^5.0.3",
     "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }
