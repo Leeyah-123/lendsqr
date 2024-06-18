@@ -21,7 +21,7 @@ export default {
   },
 
   staging: {
-    client: 'mysql',
+    client: 'mysql2',
     connection: process.env.STAGING_DB_CONNECTION_STRING,
     ...knexSnakeCaseMappers,
     pool: {
@@ -34,7 +34,7 @@ export default {
   },
 
   production: {
-    client: 'mysql',
+    client: 'mysql2',
     connection: process.env.PROD_DB_CONNECTION_STRING,
     ...knexSnakeCaseMappers,
     pool: {
