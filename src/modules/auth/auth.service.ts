@@ -1,3 +1,4 @@
+import axios, { AxiosError } from 'axios';
 import { StatusCodes } from 'http-status-codes';
 import { UserIDJwtPayload, sign, verify } from 'jsonwebtoken';
 import { User, Wallet } from 'knex';
@@ -7,7 +8,7 @@ import { comparePassword, hashPassword } from '../../lib/bcrypt';
 import { ServiceResponse } from '../core/types';
 import { LoginDto, RegisterDto } from './auth.validation';
 
-type AuthTokens = {
+export type AuthTokens = {
   accessToken: string;
   refreshToken: string;
 };
@@ -31,7 +32,7 @@ export default class AuthService {
     delete (user as Partial<User>).password;
 
     return {
-      message: 'User profile fetched successful',
+      message: 'User profile fetched successfully',
       data: user,
     };
   }
@@ -48,7 +49,41 @@ export default class AuthService {
         message: 'An account already exists for this email',
       };
 
-    // Ensure user is not in the Adjutor Karma blacklist
+    try {
+      // Ensure user is not in the Adjutor Karma blacklist
+      await axios.get(
+        `${process.env.ADJUTOR_API_URL}/verification/karma/'${decodeURI(
+          dto.email
+        )}'`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.ADJUTOR_API_KEY}`,
+          },
+        }
+      );
+
+      return {
+        status: StatusCodes.FORBIDDEN,
+        message:
+          'You are not allowed to register on this platform due to your credit score',
+      };
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        if (err.response?.status !== 404) {
+          return {
+            status: StatusCodes.INTERNAL_SERVER_ERROR,
+            message:
+              'Unable to complete registration at this time. Please try again later',
+          };
+        }
+      } else {
+        return {
+          status: StatusCodes.INTERNAL_SERVER_ERROR,
+          message:
+            'Unable to complete registration at this time. Please try again later',
+        };
+      }
+    }
 
     if (dto.username) {
       const usernameExist = await this.userDao.findByUsername(dto.username);
@@ -72,6 +107,7 @@ export default class AuthService {
       delete (user as Partial<User>).password;
 
       return {
+        status: StatusCodes.CREATED,
         message: 'User created successfully',
         data: {
           user,
@@ -90,7 +126,7 @@ export default class AuthService {
   async login(
     dto: LoginDto,
     _logger: pino.Logger
-  ): Promise<ServiceResponse<User & AuthTokens>> {
+  ): Promise<ServiceResponse<{ user: User } & AuthTokens>> {
     const user = await this.userDao.findByEmail(dto.email);
     if (!user)
       return {
@@ -111,7 +147,7 @@ export default class AuthService {
     return {
       message: 'User logged in successfully',
       data: {
-        ...user,
+        user,
         ...this.generateAuthTokens(user.id),
       },
     };
@@ -119,22 +155,23 @@ export default class AuthService {
 
   async refreshToken(token: string): Promise<ServiceResponse<AuthTokens>> {
     const payload = this.verifyRefreshToken(token);
-    if (payload) {
-      const user = await this.userDao.findById(payload.userId);
-      if (!user)
-        return {
-          status: StatusCodes.FORBIDDEN,
-          message: 'Invalid refresh token',
-        };
-
+    if (!payload) {
       return {
-        message: 'Token refreshed successfully',
-        data: this.generateAuthTokens(payload.userId),
+        status: StatusCodes.BAD_REQUEST,
+        message: 'Invalid refresh token provided',
       };
     }
 
+    const user = await this.userDao.findById(payload.userId);
+    if (!user)
+      return {
+        status: StatusCodes.BAD_REQUEST,
+        message: 'Invalid refresh token provided',
+      };
+
     return {
-      message: 'Malformed or expired token provided',
+      message: 'Token refreshed successfully',
+      data: this.generateAuthTokens(payload.userId),
     };
   }
 

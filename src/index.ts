@@ -52,8 +52,8 @@ app.use((_req, res) => {
 // Error Boundary
 app.use(errorHandler);
 
-app.listen(PORT, async () => {
+const server = app.listen(PORT, async () => {
   rootLogger.info(`App listening on port ${PORT}`);
 });
 
-export default app;
+export default server;

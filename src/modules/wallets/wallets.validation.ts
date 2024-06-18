@@ -44,4 +44,24 @@ export const withdrawFundsValidationSchema = z.object({
       invalid_type_error: 'Invalid amount',
     })
     .min(0, { message: 'Amount must be greater than 0' }),
+  bankDetails: z.object({
+    acctNumber: z
+      .number({
+        required_error: 'Please provide an account number',
+        invalid_type_error: 'Invalid account number',
+      })
+      .min(11, { message: 'Invalid account number' }),
+    bankName: z
+      .string({
+        required_error: 'Please provide a bank name',
+        invalid_type_error: 'Invalid bank name',
+      })
+      .min(2, { message: 'Invalid bank name' }),
+    acctName: z
+      .string({
+        required_error: 'Please provide an account name',
+        invalid_type_error: 'Invalid account name',
+      })
+      .min(2, { message: 'Invalid account name' }),
+  }),
 });

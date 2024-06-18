@@ -13,7 +13,7 @@ export const authMiddleware: RequestHandler = (req, res, next) => {
   verify(token, process.env.ACCESS_TOKEN_SECRET!, async (err, decoded) => {
     if (err)
       return res.status(403).json({
-        error: 'Malformed/Expired authentication token provided',
+        error: 'Invalid authentication token provided',
       });
 
     // Verify user id
@@ -28,8 +28,9 @@ export const authMiddleware: RequestHandler = (req, res, next) => {
       req.user = { id: (decoded as UserIDJwtPayload).userId };
     } catch (err) {
       console.log('Error', err);
-      return res.status(403).json({
-        error: 'Invalid authentication token provided',
+      return res.status(500).json({
+        error:
+          'Unable to authenticate user at this time. Please try again later.',
       });
     }
 

@@ -1,4 +1,7 @@
+import * as dotenv from 'dotenv';
 import { knexSnakeCaseMappers } from 'objection';
+
+dotenv.config({ path: __dirname + '/../../.env' });
 
 /**
  * @type { Object.<string, import("knex").Knex.Config> }

@@ -143,6 +143,7 @@ export default class WalletsService {
   async withdrawFunds({
     userId,
     amount,
+    bankDetails,
   }: WithdrawFundsDto): Promise<ServiceResponse<Wallet>> {
     const wallet = await this.walletDao.findByUserId(userId);
     if (!wallet) {
@@ -158,6 +159,8 @@ export default class WalletsService {
         message: 'Insufficient funds',
       };
     }
+
+    // TODO: Validate provided bank details
 
     const updatedWallet = await db.transaction(async (trx) => {
       await trx('wallets')
@@ -175,7 +178,7 @@ export default class WalletsService {
         userId,
         type: TransactionType.WITHDRAWAL,
       });
-      await this.financesService.transfer(wallet.acctNumber, amount);
+      await this.financesService.transfer(bankDetails, amount);
 
       return updatedWallet;
     });
