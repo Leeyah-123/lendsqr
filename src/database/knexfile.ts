@@ -1,12 +1,10 @@
+import type { Knex } from 'knex';
 import * as dotenv from 'dotenv';
 import { knexSnakeCaseMappers } from 'objection';
 
 dotenv.config({ path: __dirname + '/../../.env' });
 
-/**
- * @type { Object.<string, import("knex").Knex.Config> }
- */
-export default {
+const config: { [key: string]: Knex.Config } = {
   development: {
     client: 'mysql2',
     connection: process.env.DEV_DB_CONNECTION_STRING,
@@ -46,3 +44,5 @@ export default {
     },
   },
 };
+
+module.exports = config;
