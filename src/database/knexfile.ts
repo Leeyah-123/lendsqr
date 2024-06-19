@@ -7,7 +7,7 @@ dotenv.config({ path: __dirname + '/../../.env' });
 const config: { [key: string]: Knex.Config } = {
   development: {
     client: 'mysql2',
-    connection: process.env.DEV_DB_CONNECTION_STRING,
+    connection: process.env.DB_URL,
     ...knexSnakeCaseMappers(),
     pool: {
       min: 2,
@@ -20,7 +20,7 @@ const config: { [key: string]: Knex.Config } = {
 
   staging: {
     client: 'mysql2',
-    connection: process.env.STAGING_DB_CONNECTION_STRING,
+    connection: process.env.DB_URL,
     ...knexSnakeCaseMappers,
     pool: {
       min: 2,
@@ -33,7 +33,7 @@ const config: { [key: string]: Knex.Config } = {
 
   production: {
     client: 'mysql2',
-    connection: process.env.PROD_DB_CONNECTION_STRING,
+    connection: process.env.DB_URL,
     ...knexSnakeCaseMappers,
     pool: {
       min: 2,
