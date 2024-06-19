@@ -1,5 +1,5 @@
-import type { Knex } from 'knex';
 import * as dotenv from 'dotenv';
+import type { Knex } from 'knex';
 import { knexSnakeCaseMappers } from 'objection';
 
 dotenv.config({ path: __dirname + '/../../.env' });
@@ -45,4 +45,4 @@ const config: { [key: string]: Knex.Config } = {
   },
 };
 
-module.exports = config;
+export default config;
