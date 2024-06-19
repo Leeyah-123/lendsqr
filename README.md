@@ -111,7 +111,7 @@ The project follows a modular structure with separate directories for controller
 - `src/utils`: Contains utility functions and constants.
 - `src/lib`: Contains third-party library wrappers or extensions.
 - `src/database`: Contains database configuration and connection setup.
-- `src/core/`: Contains core classes and types used throughout the application.
+- `src/core`: Contains core classes and types used throughout the application.
 
 ## License
 
