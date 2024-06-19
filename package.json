@@ -2,6 +2,12 @@
   "name": "lendsqr",
   "version": "1.0.0",
   "description": "",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/lendsqr/blob/master/LICENSE"
+    }
+  ],
   "main": "dist/index.js",
   "scripts": {
     "build": "rm -rf dist/ && tsc -p tsconfig.json",
